@@ -170,6 +170,7 @@ eemo_rv eemo_ether_capture_init(const char* interface)
 	char 			errbuf[PCAP_ERRBUF_SIZE]	= { 0 };
 	char*			capture_filter			= NULL;
 	struct bpf_program	packet_filter;
+	pcap_if_t *alldevs;
 	
 	handle = NULL;
 
@@ -203,7 +204,15 @@ eemo_rv eemo_ether_capture_init(const char* interface)
 	}
 
 	/* Determine the default interface if none was specified */
-	cap_if = (interface == NULL) ? pcap_lookupdev(errbuf) : interface;
+	// cap_if = (interface == NULL) ? pcap_lookupdev(errbuf) : interface;
+	if (interface == NULL) {
+		if (pcap_findalldevs(&alldevs, errbuf) == -1) {
+			ERROR_MSG("Failed to find capture interface: %s", errbuf);
+			return ERV_ETH_NOT_EXIST;
+		}
+		cap_if = alldevs->name;
+	} 
+
 
 	if (cap_if == NULL)
 	{

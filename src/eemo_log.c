@@ -167,7 +167,7 @@ void eemo_log(const int log_at_level, const char* file, const int line, const ch
 
 	if (log_at_level == EEMO_LOG_DEBUG)
 	{
-		static char debug_buf[8192];
+		static char debug_buf[8192 - 128];
 		vsnprintf(debug_buf, 8192, format, args);
 		snprintf(log_buf, 8192, "%s(%d): %s", file, line, debug_buf);
 	}

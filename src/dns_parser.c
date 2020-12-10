@@ -11,8 +11,8 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of SURFnet bv nor the names of its contributors 
- *    may be used to endorse or promote products derived from this 
+ * 3. Neither the name of SURFnet bv nor the names of its contributors
+ *    may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
@@ -33,8 +33,9 @@
  * The Extensible IP Monitor (EEMO)
  * DNS packet parsing
  */
-
+#define _GNU_SOURCE
 #include "config.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
@@ -82,7 +83,7 @@ void eemo_free_dns_rr_rdata(eemo_dns_rr* rr)
 	{
 		free(rr->rdata_txt);
 	}
-	
+
 	if (rr->rdata == NULL)
 	{
 		/* No data needs to be freed */
@@ -140,7 +141,7 @@ void eemo_free_dns_rr_list(eemo_dns_rr** rr_list)
 	if (rr_list == NULL)
 	{
 		ERROR_MSG("Invalid parameter to eemo_free_dns_rr_list");
-		
+
 		return;
 	}
 
@@ -316,7 +317,7 @@ eemo_rv eemo_parse_dns_queries(const eemo_packet_buf* packet, eemo_dns_packet* d
 
 		new_query->qtype = ntohs(*((unsigned short*) &packet->data[*offset]));
 		*offset += 2;
-		
+
 		new_query->qclass = ntohs(*((unsigned short*) &packet->data[*offset]));
 		*offset += 2;
 
@@ -392,11 +393,16 @@ char* eemo_rdata_to_string(eemo_dns_rr* rr)
 			{
 				if (rv != NULL)
 				{
+                    /*
 					size_t cur_len = strlen(rv);
+					size_t rvsize;
 
 					rv = (char*) realloc(rv, (cur_len + strlen(txt_it->string) + 2) * sizeof(char));
-					
-					sprintf(rv, "%s\n%s", rv, txt_it->string);
+
+					rvsize = strlen(rv);
+					snprintf(rv + rvsize, sizeof rv - rvsize , "%s\n%s", rv, txt_it->string);
+                    */
+                    asprintf(&rv, "%s\n%s", rv, txt_it->string);
 				}
 				else
 				{
@@ -478,7 +484,7 @@ eemo_rv eemo_parse_dns_rr_a(const eemo_packet_buf* packet, eemo_dns_rr* rr, unsi
 	if (rdata_len != 4)
 	{
 		PARSE_MSG("Invalid A record RDATA, wrong size(%d)", rdata_len);
-		
+
 		return ERV_MALFORMED;
 	}
 
@@ -665,7 +671,7 @@ eemo_rv eemo_parse_dns_rdata(const eemo_packet_buf* packet, eemo_dns_rr* rr, uns
 		rv = eemo_copy_dns_rdata(packet, rr, offset, rdata_len);
 		break;
 	}
-	
+
 	if (FLAG_SET(parser_flags, PARSE_RDATA_TO_STR))
 	{
 		rr->rdata_txt = eemo_rdata_to_string(rr);
@@ -779,7 +785,7 @@ eemo_rv eemo_parse_dns_rrs(const eemo_packet_buf* packet, eemo_dns_packet* dns_p
 					{
 						unsigned short	opt_code	= 0;
 						unsigned short	opt_len		= 0;
-						
+
 						opt_code = ntohs(*((unsigned short*) &rdata[rdata_ofs]));
 						rdata_ofs += 2;
 
@@ -787,7 +793,7 @@ eemo_rv eemo_parse_dns_rrs(const eemo_packet_buf* packet, eemo_dns_packet* dns_p
 						rdata_ofs += 2;
 
 						rdata_len_rem -= 4;
-						
+
 						/* Check if there is enough RDATA remaining */
 						if (rdata_len_rem < opt_len)
 						{

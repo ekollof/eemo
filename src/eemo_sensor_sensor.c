@@ -735,10 +735,20 @@ eemo_rv eemo_sensor_capture(void)
 	const char*		pcap_if				= NULL;
 	char			filter_expr[4096]		= { 0 };
 	pcap_t*			new_handle			= NULL;
+	pcap_if_t *alldevs;
 
 	pcap_handle = NULL;
 
-	pcap_if = (sensor_iface != NULL) ? sensor_iface : pcap_lookupdev(errbuf);
+	//pcap_if = (sensor_iface != NULL) ? sensor_iface : pcap_lookupdev(errbuf);
+	if (sensor_iface != NULL) {
+		if (pcap_findalldevs(&alldevs, errbuf) == -1) {
+			ERROR_MSG("Coudn't determine cap interface: %s", errbuf);
+			return ERV_ETH_NOT_EXIST;
+		}
+		pcap_if = alldevs->name;
+	}
+	
+
 
 	if (pcap_if == NULL)
 	{
